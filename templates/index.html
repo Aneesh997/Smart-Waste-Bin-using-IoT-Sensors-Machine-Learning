@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Smart Waste Bin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #00c853;
+            --primary-dark: #009624;
+            --secondary: #2196f3;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #00bcd4;
+            --purple: #9c27b0;
+            --dark: #121212;
+            --dark-card: #1e1e1e;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .card {
+            background: var(--dark-card);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .sensor-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .sensor-label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sensor-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .progress-container {
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .gas-progress {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        }
+
+        .gas-progress.high {
+            background: linear-gradient(90deg, var(--warning), var(--danger));
+        }
+
+        .fill-progress {
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--info));
+        }
+
+        .moisture-progress {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        }
+
+        .moisture-progress.wet {
+            background: linear-gradient(90deg, var(--warning), var(--danger));
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .status-value {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .status-wet {
+            color: #ff5252;
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .status-dry {
+            color: var(--secondary);
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .status-full {
+            color: var(--warning);
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
+
+        .status-ok {
+            color: var(--primary);
+            background: rgba(0, 200, 83, 0.1);
+            border: 1px solid rgba(0, 200, 83, 0.3);
+        }
+
+        /* Smaller Webcam Container */
+        .webcam-container {
+            position: relative;
+            background: var(--dark-card);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            height: fit-content;
+        }
+
+        .webcam-header {
+            background: linear-gradient(135deg, var(--purple), #7b1fa2);
+            padding: 12px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        #videoFeed {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .ml-prediction {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9));
+            padding: 12px;
+            text-align: center;
+        }
+
+        .prediction-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: var(--primary);
+        }
+
+        .confidence-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-badge {
+            background: linear-gradient(135deg, var(--danger), #d32f2f);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 12px 0;
+            font-weight: bold;
+            text-align: center;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 6px 16px rgba(244, 67, 54, 0.6);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+            }
+        }
+
+        .sensor-info {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .icon {
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ Smart Waste Bin Dashboard</h1>
+            <p class="subtitle">AI-Powered Waste Management System with Real-time Monitoring</p>
+        </div>
+
+        <!-- Left Column - Sensors and Controls -->
+        <div class="left-column">
+            <!-- Sensor Data Card -->
+            <div class="card">
+                <h2>📊 Live Sensor Data</h2>
+                <div class="sensor-grid">
+                    <!-- Gas Level -->
+                    <div class="sensor-item">
+                        <div class="sensor-header">
+                            <div class="sensor-label">
+                                <span class="icon">👃</span> Odor Level (Gas)
+                            </div>
+                            <div class="sensor-value" id="gasStatus">Normal ✅</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill gas-progress" id="gasBar" style="width: 100%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span>Good</span>
+                                <span>Normal</span>
+                                <span>High Odor</span>
+                            </div>
+                        </div>
+                        <div class="sensor-info">
+                            Raw Value: <span id="gasValue">--</span> | 
+                            Baseline: <span id="gasBaseline">--</span> | 
+                            Threshold: <span id="gasThreshold">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Moisture Level -->
+                    <div class="sensor-item">
+                        <div class="sensor-header">
+                            <div class="sensor-label">
+                                <span class="icon">💧</span> Moisture Content
+                            </div>
+                            <div class="sensor-value" id="moistureStatus">Dry ✅</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill moisture-progress" id="moistureBar" style="width: 100%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span>Dry</span>
+                                <span>Normal</span>
+                                <span>Wet</span>
+                            </div>
+                        </div>
+                        <div class="sensor-info">
+                            Raw Value: <span id="moistureValue">--</span> | 
+                            Wet if < 3200 | Dry if ≥ 3200
+                        </div>
+                    </div>
+
+                    <!-- Fill Level -->
+                    <div class="sensor-item">
+                        <div class="sensor-header">
+                            <div class="sensor-label">
+                                <span class="icon">📦</span> Bin Fill Level
+                            </div>
+                            <div class="sensor-value" id="fillPercent">--%</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill fill-progress" id="fillBar" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span>Empty</span>
+                                <span>50%</span>
+                                <span>Full</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status Card -->
+            <div class="card">
+                <h2>🔔 System Status</h2>
+                <div class="status-grid">
+                    <div class="status-item" id="odorStatus">
+                        <div class="status-label">Odor Detection</div>
+                        <div class="status-value">--</div>
+                    </div>
+                    <div class="status-item" id="moistureDetectStatus">
+                        <div class="status-label">Moisture Detection</div>
+                        <div class="status-value">--</div>
+                    </div>
+                    <div class="status-item" id="combinedWetStatus">
+                        <div class="status-label">Overall Wet Waste</div>
+                        <div class="status-value">--</div>
+                    </div>
+                    <div class="status-item" id="fullStatus">
+                        <div class="status-label">Bin Capacity</div>
+                        <div class="status-value">--</div>
+                    </div>
+                </div>
+
+                <!-- ML Prediction Status -->
+                <div id="mlAlert" class="alert-badge" style="display: none;">
+                    🚨 AI Detected Organic Waste!
+                </div>
+
+                <div style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong>🤖 AI Prediction:</strong>
+                        <span id="mlPrediction" style="color: var(--primary); font-weight: bold;">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>🎯 Confidence:</strong>
+                        <span id="mlConfidence" style="color: var(--info); font-weight: bold;">--%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Smaller Webcam Feed -->
+        <div class="webcam-container">
+            <div class="webcam-header">
+                <span class="icon">📷</span> AI Waste Classification
+            </div>
+            <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+            <div class="ml-prediction">
+                <div class="prediction-text" id="currentPrediction">Initializing Camera...</div>
+                <div class="confidence-text" id="currentConfidence">AI scanning every 5 seconds</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dynamic baseline tracking
+        let gasBaseline = null;
+        let baselineSamples = [];
+        const maxBaselineSamples = 50;
+
+        function updateGasBaseline(currentGas) {
+            baselineSamples.push(currentGas);
+            
+            if (baselineSamples.length > maxBaselineSamples) {
+                baselineSamples.shift();
+            }
+            
+            if (baselineSamples.length > 0) {
+                const sum = baselineSamples.reduce((a, b) => a + b, 0);
+                gasBaseline = Math.round(sum / baselineSamples.length);
+            }
+            
+            return gasBaseline;
+        }
+
+        function calculateGasStatus(gasValue) {
+            if (gasBaseline === null) return false;
+            return gasValue >= gasBaseline + 500;
+        }
+
+        function calculateMoistureStatus(moistureValue) {
+            return moistureValue < 3200;
+        }
+
+        async function getData() {
+            try {
+                const r = await fetch("/sensor-data");
+                const d = await r.json();
+
+                const currentGas = d.gas || 0;
+                const currentMoisture = d.moisture || 0;
+                
+                document.getElementById("gasValue").innerText = currentGas;
+                document.getElementById("moistureValue").innerText = currentMoisture;
+
+                const baseline = updateGasBaseline(currentGas);
+                const isHighGas = calculateGasStatus(currentGas);
+                const isMoistureWet = calculateMoistureStatus(currentMoisture);
+
+                if (baseline !== null) {
+                    document.getElementById("gasBaseline").innerText = baseline;
+                    document.getElementById("gasThreshold").innerText = baseline + 500;
+                }
+
+                // Update gas/odor level
+                const gasBar = document.getElementById("gasBar");
+                const gasStatus = document.getElementById("gasStatus");
+                if (isHighGas) {
+                    gasBar.className = "progress-fill gas-progress high";
+                    gasStatus.innerText = "High Odor 🚨";
+                    gasStatus.style.color = "#ff9800";
+                } else {
+                    gasBar.className = "progress-fill gas-progress";
+                    gasStatus.innerText = "Normal ✅";
+                    gasStatus.style.color = "#00c853";
+                }
+
+                // Update moisture level
+                const moistureBar = document.getElementById("moistureBar");
+                const moistureStatus = document.getElementById("moistureStatus");
+                if (isMoistureWet) {
+                    moistureBar.className = "progress-fill moisture-progress wet";
+                    moistureStatus.innerText = "Wet 🚨";
+                    moistureStatus.style.color = "#ff5252";
+                } else {
+                    moistureBar.className = "progress-fill moisture-progress";
+                    moistureStatus.innerText = "Dry ✅";
+                    moistureStatus.style.color = "#00c853";
+                }
+
+                // Update fill level
+                document.getElementById("fillPercent").innerText = d.fill + "%";
+                document.getElementById("fillBar").style.width = d.fill + "%";
+
+                // Update status indicators
+                const odorStatus = document.getElementById("odorStatus");
+                const moistureDetectStatus = document.getElementById("moistureDetectStatus");
+                const combinedWetStatus = document.getElementById("combinedWetStatus");
+                const fullStatus = document.getElementById("fullStatus");
+                
+                if (isHighGas) {
+                    odorStatus.className = "status-item status-wet";
+                    odorStatus.querySelector('.status-value').innerText = "Detected 🚨";
+                } else {
+                    odorStatus.className = "status-item status-dry";
+                    odorStatus.querySelector('.status-value').innerText = "Normal ✅";
+                }
+
+                if (isMoistureWet) {
+                    moistureDetectStatus.className = "status-item status-wet";
+                    moistureDetectStatus.querySelector('.status-value').innerText = "Detected 🚨";
+                } else {
+                    moistureDetectStatus.className = "status-item status-dry";
+                    moistureDetectStatus.querySelector('.status-value').innerText = "Normal ✅";
+                }
+
+                if (d.wet) {
+                    combinedWetStatus.className = "status-item status-wet";
+                    combinedWetStatus.querySelector('.status-value').innerText = "Detected 🚨";
+                } else {
+                    combinedWetStatus.className = "status-item status-dry";
+                    combinedWetStatus.querySelector('.status-value').innerText = "Normal ✅";
+                }
+
+                if (d.full) {
+                    fullStatus.className = "status-item status-full";
+                    fullStatus.querySelector('.status-value').innerText = "Full 🚨";
+                } else {
+                    fullStatus.className = "status-item status-ok";
+                    fullStatus.querySelector('.status-value').innerText = "Normal ✅";
+                }
+
+                // Update ML prediction
+                document.getElementById("mlPrediction").innerText = d.ml_prediction;
+                document.getElementById("mlConfidence").innerText = d.ml_confidence + "%";
+                document.getElementById("currentPrediction").innerText = d.ml_prediction;
+                document.getElementById("currentConfidence").innerText = `Confidence: ${d.ml_confidence}%`;
+
+                const mlAlert = document.getElementById("mlAlert");
+                if (d.ml_wet_detected && d.ml_confidence > 70) {
+                    mlAlert.style.display = 'block';
+                } else {
+                    mlAlert.style.display = 'none';
+                }
+
+            } catch (e) {
+                console.log("Error fetching data:", e);
+            }
+        }
+
+        // Update data every second
+        setInterval(getData, 1000);
+        getData();
+
+        // Auto-refresh video feed every 15 seconds
+        setInterval(() => {
+            const videoFeed = document.getElementById('videoFeed');
+            const currentSrc = videoFeed.src;
+            videoFeed.src = '';
+            setTimeout(() => {
+                videoFeed.src = currentSrc;
+            }, 100);
+        }, 15000);
+    </script>
+
+</body>
+
+</html>

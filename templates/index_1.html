@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Smart Waste Bin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #00c853;
+            --primary-dark: #009624;
+            --secondary: #2196f3;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --dark: #121212;
+            --dark-card: #1e1e1e;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--dark-card);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--primary);
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sensor-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .sensor-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+
+        .sensor-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .status-wet {
+            background: rgba(244, 67, 54, 0.2);
+            color: #ff5252;
+        }
+
+        .status-dry {
+            background: rgba(33, 150, 243, 0.2);
+            color: var(--secondary);
+        }
+
+        .status-full {
+            background: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .status-ok {
+            background: rgba(0, 200, 83, 0.2);
+            color: var(--primary);
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .stop {
+            background: var(--danger);
+            color: white;
+        }
+
+        .start {
+            background: var(--primary);
+            color: white;
+        }
+
+        .webcam-container {
+            position: relative;
+            background: var(--dark-card);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .webcam-header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #videoFeed {
+            width: 100%;
+            height: 480px;
+            object-fit: cover;
+        }
+
+        .ml-prediction {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            text-align: center;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .prediction-text {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .confidence-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-badge {
+            background: rgba(244, 67, 54, 0.3);
+            color: #ff5252;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ Smart Waste Bin Dashboard</h1>
+            <p class="subtitle">Real-time monitoring with AI waste classification</p>
+        </div>
+
+        <!-- Left Column - Sensors and Controls -->
+        <div class="left-column">
+            <div class="card">
+                <h2>📊 Sensor Data</h2>
+                <div class="sensor-grid">
+                    <div class="sensor-item">
+                        <div class="sensor-label">Gas Level</div>
+                        <div class="sensor-value" id="gas">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Moisture</div>
+                        <div class="sensor-value" id="moisture">--</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Distance</div>
+                        <div class="sensor-value" id="distance">--</div>
+                        <div class="sensor-label">cm</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">Fill Level</div>
+                        <div class="sensor-value" id="fill">--</div>
+                        <div class="sensor-label">%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🔔 System Status</h2>
+                <div style="margin: 15px 0;">
+                    <div><strong>Wet Waste Detected:</strong> <span id="wet">--</span></div>
+                    <div><strong>Bin Full:</strong> <span id="full">--</span></div>
+                    <div><strong>System Status:</strong> <span id="status">--</span></div>
+                </div>
+
+                <!-- ML Prediction Status -->
+                <div id="mlAlert" class="alert-badge" style="display: none;">
+                    🚨 ML Detected Organic Waste!
+                </div>
+
+                <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <div><strong>AI Prediction:</strong> <span id="mlPrediction">--</span></div>
+                    <div><strong>Confidence:</strong> <span id="mlConfidence">--</span>%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎛️ Buzzer Control</h2>
+                <button class="stop" onclick="buzz('stop')">🔇 Stop Buzzer</button>
+                <button class="start" onclick="buzz('start')">🔊 Start Buzzer</button>
+            </div>
+        </div>
+
+        <!-- Right Column - Webcam Feed -->
+        <div class="webcam-container">
+            <div class="webcam-header">
+                <i class="fas fa-camera"></i> AI Waste Classification Camera
+            </div>
+            <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Live Camera Feed">
+            <div class="ml-prediction">
+                <div class="prediction-text" id="currentPrediction">Point camera at waste object</div>
+                <div class="confidence-text" id="currentConfidence">Scanning every 5 seconds</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function getData() {
+            try {
+                const r = await fetch("/sensor-data");
+                const d = await r.json();
+
+                document.getElementById("gas").innerText = d.gas;
+                document.getElementById("moisture").innerText = d.moisture;
+                document.getElementById("distance").innerText = d.distance;
+                document.getElementById("fill").innerText = d.fill;
+                document.getElementById("wet").innerText = d.wet ? "Yes ✅" : "No ❌";
+                document.getElementById("full").innerText = d.full ? "Yes 🚨" : "No ✅";
+                document.getElementById("status").innerText = d.status;
+
+                // Update ML prediction
+                document.getElementById("mlPrediction").innerText = d.ml_prediction;
+                document.getElementById("mlConfidence").innerText = d.ml_confidence;
+                document.getElementById("currentPrediction").innerText = d.ml_prediction;
+                document.getElementById("currentConfidence").innerText = `Confidence: ${d.ml_confidence}%`;
+
+                // Show/hide ML alert
+                const mlAlert = document.getElementById("mlAlert");
+                if (d.ml_wet_detected && d.ml_confidence > 70) {
+                    mlAlert.style.display = 'block';
+                } else {
+                    mlAlert.style.display = 'none';
+                }
+
+            } catch (e) {
+                console.log("Error fetching data:", e);
+            }
+        }
+
+        // Update data every second
+        setInterval(getData, 1000);
+        getData();
+
+        async function buzz(type) {
+            await fetch("/buzzer", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `state=${type}`
+            });
+        }
+
+        // Auto-refresh video feed every 10 seconds to prevent freezing
+        setInterval(() => {
+            const videoFeed = document.getElementById('videoFeed');
+            videoFeed.src = videoFeed.src;
+        }, 10000);
+    </script>
+
+</body>
+
+</html>
