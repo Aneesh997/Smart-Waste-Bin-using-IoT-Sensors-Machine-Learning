@@ -70,3 +70,50 @@ The system reduces manual effort, prevents overflow, and improves waste segregat
 ```bash
 git clone https://github.com/your-username/smart-waste-bin.git
 cd smart-waste-bin
+```
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+### Run The Application
+
+```bash
+flask run
+```
+
+### Open browser and go to:
+👉 http://127.0.0.1:5000
+
+## Project Structure
+
+```
+├── app.py                     # Main Flask application
+├── waste_model.keras          # Trained CNN model
+├── scaler.joblib              # Scikit-learn scaler
+├── requirements.txt           # Python dependencies
+├── Procfile                   # Deployment config
+├── static/                    # CSS, JS, images
+└── templates/                 # HTML frontend files
+```
+
+## Use Cases
+
+-Smart city waste management
+-College campuses and offices
+-Public places and malls
+-Automated waste segregation systems
+
+## Future Scope
+-Cloud-based dashboard integration
+-Mobile app notifications
+-Battery-powered wireless bins
+-Robotic waste sorting
+-Classification of more waste categories
+
+## License
+
+This project is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for more details.
+
+
